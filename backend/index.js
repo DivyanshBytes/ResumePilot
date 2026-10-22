@@ -24,6 +24,10 @@ app.use(
   })
 );
 
+app.use('/api/auth', require('./routes/authRoutes'));
+
+app.use(require('./middlewares/errorMiddleware'));
+
 app.get('/', (req, res) => {
   res.status(200).json({
     success: true,
