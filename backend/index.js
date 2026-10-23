@@ -4,6 +4,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
 dotenv.config(); 
+console.log('AI key loaded:', process.env.AI_API_KEY?.slice(0, 4), '| length:', process.env.AI_API_KEY?.length);
 
 const connectDB = require('./config/database');
 connectDB();
@@ -25,6 +26,7 @@ app.use(
 );
 
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/resumes', require('./routes/resumeRoutes'));
 
 app.use(require('./middlewares/errorMiddleware'));
 

@@ -22,6 +22,12 @@ module.exports = (err, req, res, next) => {
     message = 'Invalid ID format';
   }
 
+    // Multer errors (e.g. file too large)
+  if (err.name === 'MulterError') {
+    statusCode = 400;
+    message = err.code === 'LIMIT_FILE_SIZE' ? 'File is too large. Maximum size is 5 MB' : err.message;
+  }
+
   if (statusCode === 500) console.error('Error 500', err);
 
   res.status(statusCode).json({
