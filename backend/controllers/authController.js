@@ -114,7 +114,7 @@ exports.resendOtp = asyncHandler(async (req, res) => {
   if (!email) throw new AppError('Email is required', 400);
 
   const user = await User.findOne({ email });
-
+  console.log('resend-otp:', email, '| user found:', !!user, '| verified:', user?.isVerified);
   // Only act for unverified accounts, but always answer the same way,
   // so nobody can use this route to discover which emails are registered
   if (user && !user.isVerified) {

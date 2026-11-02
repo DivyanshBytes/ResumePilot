@@ -56,6 +56,16 @@ const jobApplicationSchema = new mongoose.Schema(
     position: { type: Number, default: 0 },
     appliedDate: Date,
     notes: { type: String, default: '' },
+    
+    atsScore: {
+        overall: { type: Number, min: 0, max: 100, default: 0 },
+        keywordMatch: { type: Number, default: 0 },
+        skillsMatch: { type: Number, default: 0 },
+        formatting: { type: Number, default: 0 },
+        matchedKeywords: [String],
+        missingKeywords: [String],
+        suggestions: [String],   // NEW
+    },
   },
   { timestamps: true }
 );

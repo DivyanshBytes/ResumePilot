@@ -27,6 +27,7 @@ app.use(
 
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/resumes', require('./routes/resumeRoutes'));
+app.use('/api/applications', require('./routes/applicationRoutes'));
 
 app.use(require('./middlewares/errorMiddleware'));
 
