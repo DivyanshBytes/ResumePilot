@@ -6,6 +6,22 @@ const analyzeJob = require('../utils/analyzeJob');
 const { scoreResume } = require('../utils/atsScorer');
 const tailorResume = require('../utils/tailorResume');
 const writeCoverLetter = require('../utils/writeCoverLetter');
+const STATUSES = ['wishlist', 'applied', 'interview', 'offer', 'rejected'];
+
+const parseDate = (value) => {
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+};
+
+// Rewrites positions as 0,1,2... for the given ids (in that order)
+const resequence = (userId, ids) =>
+  ids.length
+    ? JobApplication.bulkWrite(
+        ids.map((id, index) => ({
+          updateOne: { filter: { _id: id, user: userId }, update: { $set: { position: index } } },
+        }))
+      )
+    : null;
 
 const runScore = (resume, keywords) =>
   scoreResume({
@@ -64,6 +80,7 @@ exports.createApplication = asyncHandler(async (req, res) => {
     atsScore,
     status: 'wishlist',
     position, // goes to the end of the Wishlist column
+    statusHistory: [{ status: 'wishlist', at: new Date() }],
   });
 
   res.status(201).json({ success: true, message: 'Job analysed and scored', application });
@@ -182,4 +199,181 @@ exports.generateCoverLetter = asyncHandler(async (req, res) => {
   await application.save();
 
   res.status(200).json({ success: true, message: 'Cover letter generated', coverLetter, warnings, wordCount, tone });
+});
+
+// GET /api/applications/board   -> { board: { wishlist: [...], applied: [...], ... } }
+exports.getBoard = asyncHandler(async (req, res) => {
+  const applications = await JobApplication.find({ user: req.user._id })
+    .select('company jobTitle location jobUrl status position appliedDate createdAt atsScore.overall')
+    .sort({ position: 1, createdAt: -1 });
+
+  const board = Object.fromEntries(STATUSES.map((s) => [s, []]));
+  applications.forEach((a) => board[a.status].push(a));
+
+  res.status(200).json({ success: true, total: applications.length, board });
+});
+
+// PATCH /api/applications/:id/move   body: { status, position? }
+exports.moveApplication = asyncHandler(async (req, res) => {
+  const { status } = req.body;
+  if (!STATUSES.includes(status)) {
+    throw new AppError(`Status must be one of: ${STATUSES.join(', ')}`, 400);
+  }
+
+  const application = await JobApplication.findOne({ _id: req.params.id, user: req.user._id });
+  if (!application) throw new AppError('Application not found', 404);
+
+  const fromStatus = application.status;
+
+  // Cards already in the target column, without the one being moved
+  const targetCards = await JobApplication.find({
+    user: req.user._id,
+    status,
+    _id: { $ne: application._id },
+  })
+    .sort({ position: 1, createdAt: -1 })
+    .select('_id');
+
+  // Where to drop it: clamp to a valid index, default = end of the column
+  let index = Number.isInteger(req.body.position) ? req.body.position : targetCards.length;
+  index = Math.max(0, Math.min(index, targetCards.length));
+
+  // Record the stage change
+  if (fromStatus !== status) {
+    application.status = status;
+    application.statusHistory.push({ status, at: new Date() });
+    if (status === 'applied' && !application.appliedDate) application.appliedDate = new Date();
+    await application.save();
+  }
+
+  // Rebuild the target column's order with the card at its new index
+  const ids = targetCards.map((c) => c._id);
+  ids.splice(index, 0, application._id);
+  await resequence(req.user._id, ids);
+
+  // Close the gap in the column the card left
+  if (fromStatus !== status) {
+    const sourceCards = await JobApplication.find({ user: req.user._id, status: fromStatus })
+      .sort({ position: 1, createdAt: -1 })
+      .select('_id');
+    await resequence(req.user._id, sourceCards.map((c) => c._id));
+  }
+
+  res.status(200).json({
+    success: true,
+    message: 'Application moved',
+    application: {
+      _id: application._id,
+      status,
+      position: index,
+      appliedDate: application.appliedDate,
+    },
+  });
+});
+
+// PATCH /api/applications/:id   body: any of company, jobTitle, jobUrl, location, notes, appliedDate
+exports.updateApplication = asyncHandler(async (req, res) => {
+  const application = await JobApplication.findOne({ _id: req.params.id, user: req.user._id });
+  if (!application) throw new AppError('Application not found', 404);
+
+  // Whitelist: nobody can change user, resume, scores or status through this route
+  for (const field of ['company', 'jobTitle']) {
+    if (req.body[field] !== undefined) {
+      const value = String(req.body[field]).trim();
+      if (!value) throw new AppError(`${field} cannot be empty`, 400);
+      application[field] = value;
+    }
+  }
+  for (const field of ['jobUrl', 'location', 'notes']) {
+    if (req.body[field] !== undefined) application[field] = String(req.body[field]).trim();
+  }
+  if (req.body.appliedDate !== undefined) {
+    if (!req.body.appliedDate) {
+      application.appliedDate = undefined; // empty value clears the date
+    } else {
+      const date = parseDate(req.body.appliedDate);
+      if (!date) throw new AppError('appliedDate is not a valid date', 400);
+      application.appliedDate = date;
+    }
+  }
+
+  await application.save();
+  res.status(200).json({ success: true, message: 'Application updated', application });
+});
+
+// GET /api/applications/stats
+exports.getStats = asyncHandler(async (req, res) => {
+  const applications = await JobApplication.find({ user: req.user._id })
+    .select('status statusHistory atsScore.overall atsScore.missingKeywords createdAt');
+
+  const byStatus = Object.fromEntries(STATUSES.map((s) => [s, 0]));
+  const gapCounts = new Map();
+  let scoreSum = 0;
+  let applied = 0;
+  let interviewed = 0;
+  let offers = 0;
+  let appliedScoreSum = 0;
+  let interviewedScoreSum = 0;
+
+  for (const a of applications) {
+    const score = a.atsScore?.overall || 0;
+    byStatus[a.status] += 1;
+    scoreSum += score;
+
+    // Every stage this card has ever been in (current stage included)
+    const seen = new Set((a.statusHistory || []).map((h) => h.status));
+    seen.add(a.status);
+
+    const wasApplied = ['applied', 'interview', 'offer', 'rejected'].some((s) => seen.has(s));
+    const gotInterview = seen.has('interview') || seen.has('offer');
+
+    if (wasApplied) { applied += 1; appliedScoreSum += score; }
+    if (gotInterview) { interviewed += 1; interviewedScoreSum += score; }
+    if (seen.has('offer')) offers += 1;
+
+    for (const keyword of a.atsScore?.missingKeywords || []) {
+      const key = keyword.toLowerCase();
+      const entry = gapCounts.get(key) || { keyword, count: 0 };
+      entry.count += 1;
+      gapCounts.set(key, entry);
+    }
+  }
+
+  const pct = (part, whole) => (whole ? Math.round((part / whole) * 100) : 0);
+  const avg = (sum, count) => (count ? Math.round(sum / count) : 0);
+
+  // Applications added per week, last 8 weeks (oldest first, for a chart)
+  const DAY = 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const weekly = Array.from({ length: 8 }, (_, i) => {
+    const end = now - (7 - i) * 7 * DAY + 0; // end of week i
+    const start = end - 7 * DAY;
+    return {
+      weekStart: new Date(start).toISOString().slice(0, 10),
+      count: applications.filter((a) => {
+        const t = new Date(a.createdAt).getTime();
+        return t > start && t <= end;
+      }).length,
+    };
+  });
+  // Include anything created in the last moments in the final bucket
+  weekly[7].count += applications.filter((a) => new Date(a.createdAt).getTime() > now).length;
+
+  res.status(200).json({
+    success: true,
+    stats: {
+      total: applications.length,
+      byStatus,
+      applied,
+      interviewed,
+      offers,
+      interviewRate: pct(interviewed, applied), // % of applications that reached an interview
+      offerRate: pct(offers, applied),
+      avgScore: avg(scoreSum, applications.length),
+      avgScoreApplied: avg(appliedScoreSum, applied),
+      avgScoreInterviewed: avg(interviewedScoreSum, interviewed),
+      topGaps: [...gapCounts.values()].sort((a, b) => b.count - a.count).slice(0, 8),
+      weekly,
+    },
+  });
 });

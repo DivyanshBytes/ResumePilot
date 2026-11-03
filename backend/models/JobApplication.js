@@ -33,7 +33,7 @@ const jobApplicationSchema = new mongoose.Schema(
       missingKeywords: [String],
     },
 
-      tailoredResume: {
+    tailoredResume: {
       summary: String,
       skills: [String],
       experience: [
@@ -66,6 +66,14 @@ const jobApplicationSchema = new mongoose.Schema(
     position: { type: Number, default: 0 },
     appliedDate: Date,
     notes: { type: String, default: '' },
+    
+    statusHistory: [
+      {
+        status: String,
+        at: Date,
+        _id: false,
+      },
+    ],
     
     atsScore: {
         overall: { type: Number, min: 0, max: 100, default: 0 },
