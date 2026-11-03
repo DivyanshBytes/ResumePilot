@@ -139,4 +139,4 @@ const scoreResume = ({ rawText, parsed = {}, required = [], preferred = [] }) =>
   };
 };
 
-module.exports = { scoreResume };
+module.exports = { scoreResume, buildKeywords };

@@ -2,7 +2,8 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { protect } = require('../middlewares/authMiddleware');
 const {
-  createApplication, getApplications, getApplication, rescoreApplication, deleteApplication,
+  createApplication, getApplications, getApplication, rescoreApplication,
+  deleteApplication, tailorApplication, generateCoverLetter,
 } = require('../controllers/applicationController');
 
 const router = express.Router();
@@ -21,5 +22,7 @@ router.use(protect);
 router.route('/').post(aiLimiter, createApplication).get(getApplications);
 router.route('/:id').get(getApplication).delete(deleteApplication);
 router.post('/:id/rescore', rescoreApplication);
+router.post('/:id/tailor', aiLimiter, tailorApplication);
+router.post('/:id/cover-letter', aiLimiter, generateCoverLetter);
 
 module.exports = router;

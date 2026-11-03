@@ -4,6 +4,8 @@ const AppError = require('../utils/AppError');
 const asyncHandler = require('../utils/asyncHandler');
 const analyzeJob = require('../utils/analyzeJob');
 const { scoreResume } = require('../utils/atsScorer');
+const tailorResume = require('../utils/tailorResume');
+const writeCoverLetter = require('../utils/writeCoverLetter');
 
 const runScore = (resume, keywords) =>
   scoreResume({
@@ -116,4 +118,68 @@ exports.deleteApplication = asyncHandler(async (req, res) => {
   const application = await JobApplication.findOneAndDelete({ _id: req.params.id, user: req.user._id });
   if (!application) throw new AppError('Application not found', 404);
   res.status(200).json({ success: true, message: 'Application deleted' });
+});
+
+// Loads the application and its resume, always scoped to the logged-in user
+const loadOwned = async (req) => {
+  const application = await JobApplication.findOne({ _id: req.params.id, user: req.user._id });
+  if (!application) throw new AppError('Application not found', 404);
+
+  const resume = await Resume.findOne({ _id: application.resume, user: req.user._id });
+  if (!resume) {
+    throw new AppError('The resume linked to this application no longer exists. Rescore it with another resume first', 404);
+  }
+  if (resume.parseStatus !== 'parsed') {
+    throw new AppError('This resume has not been parsed yet. Re-parse it first', 400);
+  }
+  return { application, resume };
+};
+
+// POST /api/applications/:id/tailor
+exports.tailorApplication = asyncHandler(async (req, res) => {
+  const { application, resume } = await loadOwned(req);
+
+  const { tailored, report } = await tailorResume({
+    parsed: resume.toObject().parsed || {},
+    rawText: resume.rawText,
+    required: application.extractedKeywords.required,
+    preferred: application.extractedKeywords.preferred,
+    jobTitle: application.jobTitle,
+    company: application.company,
+  });
+
+  application.tailoredResume = { ...tailored, generatedAt: new Date() };
+  await application.save();
+
+  res.status(200).json({
+    success: true,
+    message: 'Resume tailored',
+    tailoredResume: application.tailoredResume,
+    report,
+  });
+});
+
+// POST /api/applications/:id/cover-letter   body: { tone?: "professional" | "enthusiastic" | "concise" }
+exports.generateCoverLetter = asyncHandler(async (req, res) => {
+  const { application, resume } = await loadOwned(req);
+
+  const tone = ['professional', 'enthusiastic', 'concise'].includes(req.body.tone)
+    ? req.body.tone
+    : 'professional';
+
+  const { coverLetter, warnings, wordCount } = await writeCoverLetter({
+    parsed: resume.toObject().parsed || {},
+    rawText: resume.rawText,
+    required: application.extractedKeywords.required,
+    preferred: application.extractedKeywords.preferred,
+    jobTitle: application.jobTitle,
+    company: application.company,
+    jobDescription: application.jobDescription,
+    tone,
+  });
+
+  application.coverLetter = coverLetter;
+  await application.save();
+
+  res.status(200).json({ success: true, message: 'Cover letter generated', coverLetter, warnings, wordCount, tone });
 });

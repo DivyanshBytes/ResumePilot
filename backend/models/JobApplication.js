@@ -33,13 +33,23 @@ const jobApplicationSchema = new mongoose.Schema(
       missingKeywords: [String],
     },
 
-    tailoredResume: {
+      tailoredResume: {
       summary: String,
       skills: [String],
       experience: [
         {
           company: String,
           role: String,
+          startDate: String,
+          endDate: String,
+          bullets: [String],
+          _id: false,
+        },
+      ],
+      projects: [
+        {
+          name: String,
+          techStack: [String],
           bullets: [String],
           _id: false,
         },
