@@ -6,7 +6,7 @@ const {
   tailorApplication, generateCoverLetter,
   getBoard, moveApplication, updateApplication, getStats,
 } = require('../controllers/applicationController');
-
+const { exportResume, exportCoverLetter } = require('../controllers/exportController');
 const router = express.Router();
 
 // Each analysis, tailoring or cover letter costs an AI call, so protect the free quota
@@ -32,5 +32,7 @@ router.patch('/:id/move', moveApplication);
 router.post('/:id/rescore', rescoreApplication);
 router.post('/:id/tailor', aiLimiter, tailorApplication);
 router.post('/:id/cover-letter', aiLimiter, generateCoverLetter);
+router.get('/:id/export/resume', exportResume);
+router.get('/:id/export/cover-letter', exportCoverLetter);
 
 module.exports = router;
