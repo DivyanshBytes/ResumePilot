@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+/* Dark mode is switched by a "dark" class on <html> (our toggle controls it) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --toast-bg: #ffffff;
+  --toast-fg: #0f172a;
+  --toast-border: #e2e8f0;
+}
+.dark {
+  --toast-bg: #1a1a2e;
+  --toast-fg: #f1f5f9;
+  --toast-border: rgba(255, 255, 255, 0.1);
+}
+
+body {
+  background: #f8fafc;
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+}
+.dark body {
+  background: #0a0a18;
+  color: #f1f5f9;
+}
+::selection { background: rgba(99, 102, 241, 0.3); }
+
+/* Drifting background blobs */
+@keyframes blob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -40px) scale(1.1); }
+  66% { transform: translate(-20px, 30px) scale(0.95); }
+}
+.animate-blob { animation: blob 14s ease-in-out infinite; }
+
+/* Faint grid behind the hero and auth pages */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgba(100, 116, 139, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(100, 116, 139, 0.08) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at center, black, transparent 75%);
+}
+
+/* Gradient text */
+.text-gradient {
+  background-image: linear-gradient(90deg, #6366f1, #8b5cf6, #d946ef);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-blob { animation: none; }
+}
