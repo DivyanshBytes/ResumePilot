@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Briefcase, FileText, LayoutDashboard, LogOut, Menu, Plus, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -70,7 +70,7 @@ function SidebarContent({ pillId, onNavigate }) {
   );
 }
 
-export default function AppLayout() {
+export default function AppLayout({ children }) {
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
 
@@ -131,15 +131,9 @@ export default function AppLayout() {
       </AnimatePresence>
 
       {/* Page content. Keyed by path so every page fades in */}
+            {/* Page content (PrivateRoutes handles the transitions) */}
       <main className="mx-auto max-w-5xl px-5 py-8 sm:px-8 sm:py-10">
-        <motion.div
-          key={pathname}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.28, ease: 'easeOut' }}
-        >
-          <Outlet />
-        </motion.div>
+        {children}
       </main>
     </div>
   );
