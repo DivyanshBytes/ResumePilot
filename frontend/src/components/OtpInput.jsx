@@ -61,8 +61,8 @@ export default function OtpInput({ value, onChange, onComplete, disabled, shakeK
           transition={{ type: 'spring', stiffness: 500, damping: 18 }}
           className={`h-14 w-full min-w-0 rounded-xl border bg-white/80 text-center text-xl font-bold outline-none transition dark:bg-white/5 ${
             value[i]
-              ? 'border-indigo-500 text-indigo-600 dark:text-indigo-300'
-              : 'border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 dark:border-white/10'
+              ? 'border-brand-500 text-brand-600 dark:text-brand-300'
+              : 'border-stone-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:border-white/10'
           }`}
         />
       ))}

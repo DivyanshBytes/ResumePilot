@@ -8,7 +8,7 @@ const score = (p) => {
 };
 
 const LEVELS = [
-  { label: 'Too short', bar: 'bg-slate-300 dark:bg-white/20' },
+  { label: 'Too short', bar: 'bg-stone-300 dark:bg-white/20' },
   { label: 'Weak', bar: 'bg-rose-500' },
   { label: 'Okay', bar: 'bg-amber-500' },
   { label: 'Good', bar: 'bg-lime-500' },
@@ -23,7 +23,7 @@ export default function PasswordStrength({ password }) {
     <div className="mt-2">
       <div className="flex gap-1.5">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
+          <div key={i} className="h-1.5 flex-1 overflow-hidden rounded-full bg-stone-200 dark:bg-white/10">
             <div
               className={`h-full rounded-full transition-all duration-500 ${i <= s ? level.bar : ''}`}
               style={{ width: i <= s ? '100%' : '0%' }}
@@ -31,7 +31,7 @@ export default function PasswordStrength({ password }) {
           </div>
         ))}
       </div>
-      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{level.label}</p>
+      <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">{level.label}</p>
     </div>
   );
 }

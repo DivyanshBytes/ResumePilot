@@ -50,7 +50,7 @@ export default function Login() {
     <AuthLayout
       title="Welcome back"
       subtitle="Log in to continue to your dashboard."
-      footer={<>New here? <Link to="/register" className="font-semibold text-indigo-500 hover:underline">Create an account</Link></>}
+      footer={<>New here? <Link to="/register" className="font-semibold text-brand-500 hover:underline">Create an account</Link></>}
     >
       <form onSubmit={submit} noValidate className="space-y-5">
         <Field label="Email" icon={Mail} type="email" placeholder="you@example.com" value={form.email} onChange={set('email')} error={errors.email} autoComplete="email" />

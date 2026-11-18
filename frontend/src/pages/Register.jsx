@@ -50,7 +50,7 @@ export default function Register() {
     <AuthLayout
       title="Create your account"
       subtitle="Start tailoring resumes in minutes."
-      footer={<>Already have an account? <Link to="/login" className="font-semibold text-indigo-500 hover:underline">Log in</Link></>}
+      footer={<>Already have an account? <Link to="/login" className="font-semibold text-brand-500 hover:underline">Log in</Link></>}
     >
       <form onSubmit={submit} noValidate className="space-y-5">
         <Field label="Full name" icon={User} placeholder="Your name" value={form.name} onChange={set('name')} error={errors.name} autoComplete="name" />

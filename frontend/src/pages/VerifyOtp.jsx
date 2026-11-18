@@ -69,20 +69,20 @@ export default function VerifyOtp() {
   return (
     <AuthLayout
       title="Check your email"
-      subtitle={<>We sent a 6-digit code to <span className="font-semibold text-slate-700 dark:text-slate-200">{email}</span>. It expires in 10 minutes.</>}
-      footer={<Link to="/register" className="font-semibold text-indigo-500 hover:underline">Use a different email</Link>}
+      subtitle={<>We sent a 6-digit code to <span className="font-semibold text-stone-700 dark:text-stone-200">{email}</span>. It expires in 10 minutes.</>}
+      footer={<Link to="/register" className="font-semibold text-brand-500 hover:underline">Use a different email</Link>}
     >
       <div className="space-y-6">
         <OtpInput value={code} onChange={setCode} onComplete={submit} disabled={loading} shakeKey={shakeKey} />
         <Button onClick={() => submit()} loading={loading} disabled={code.length !== 6} className="w-full">
           <ShieldCheck className="h-4 w-4" /> Verify email
         </Button>
-        <p className="text-center text-sm text-slate-500 dark:text-slate-400">
+        <p className="text-center text-sm text-stone-500 dark:text-stone-400">
           Did not get it?{' '}
           <button
             onClick={resend}
             disabled={cooldown > 0}
-            className="font-semibold text-indigo-500 hover:underline disabled:cursor-not-allowed disabled:text-slate-400 disabled:no-underline"
+            className="font-semibold text-brand-500 hover:underline disabled:cursor-not-allowed disabled:text-stone-400 disabled:no-underline"
           >
             {cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend code'}
           </button>

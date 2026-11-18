@@ -8,20 +8,20 @@ const Field = forwardRef(function Field({ label, icon: Icon, error, type = 'text
 
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">{label}</label>
+      <label className="mb-1.5 block text-sm font-medium text-stone-700 dark:text-stone-300">{label}</label>
       <div className="group relative">
         {Icon && (
-          <Icon className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-indigo-500" />
+          <Icon className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-stone-400 transition-colors group-focus-within:text-brand-500" />
         )}
         <input
           ref={ref}
           type={isPassword && show ? 'text' : type}
-          className={`w-full rounded-xl border bg-white/80 py-3 text-sm outline-none transition placeholder:text-slate-400 dark:bg-white/5 ${
+          className={`w-full rounded-xl border bg-white/80 py-3 text-sm outline-none transition placeholder:text-stone-400 dark:bg-white/5 ${
             Icon ? 'pl-11' : 'pl-4'
           } ${isPassword ? 'pr-11' : 'pr-4'} ${
             error
               ? 'border-rose-400 ring-4 ring-rose-500/10'
-              : 'border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 dark:border-white/10 dark:focus:border-indigo-400'
+              : 'border-stone-200 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 dark:border-white/10 dark:focus:border-brand-400'
           }`}
           {...props}
         />
@@ -31,7 +31,7 @@ const Field = forwardRef(function Field({ label, icon: Icon, error, type = 'text
             tabIndex={-1}
             onClick={() => setShow((s) => !s)}
             aria-label={show ? 'Hide password' : 'Show password'}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200"
           >
             {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
