@@ -1,13 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
+// The <html> class is the single source of truth, so every toggle on the page stays in sync
 export default function useTheme() {
-  // The inline script in index.html already set the class, so we just read it
   const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'));
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', dark);
-    try { localStorage.setItem('theme', dark ? 'dark' : 'light'); } catch { /* storage blocked */ }
-  }, [dark]);
+    const observer = new MutationObserver(() =>
+      setDark(document.documentElement.classList.contains('dark'))
+    );
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
 
-  return { dark, toggle: () => setDark((d) => !d) };
+  const toggle = useCallback(() => {
+    const next = !document.documentElement.classList.contains('dark');
+    document.documentElement.classList.toggle('dark', next);
+    try { localStorage.setItem('theme', next ? 'dark' : 'light'); } catch { /* storage blocked */ }
+  }, []);
+
+  return { dark, toggle };
 }

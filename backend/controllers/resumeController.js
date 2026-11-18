@@ -44,10 +44,14 @@ exports.uploadResume = asyncHandler(async (req, res) => {
   }
   await resume.save();
 
+  const safe = resume.toObject();
+  delete safe.filePath; // server folder layout is nobody's business
+  delete safe.rawText;  // large, and only used on the server
+
   res.status(201).json({
     success: true,
     message: resume.parseStatus === 'parsed' ? 'Resume uploaded and parsed' : 'Resume saved, but parsing failed. You can retry.',
-    resume,
+    resume: safe,
   });
 });
 
