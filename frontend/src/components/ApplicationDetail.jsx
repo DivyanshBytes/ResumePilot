@@ -15,6 +15,7 @@ import Button from '../components/Button';
 import Tabs from '../components/Tabs';
 import TailorPanel from '../components/TailorPanel';
 import CoverLetterPanel from '../components/CoverLetterPanel';
+import TrackingCard from '../components/TrackingCard';
 
 const TAB_IDS = ['overview', 'tailor', 'letter'];
 
@@ -247,6 +248,10 @@ export default function ApplicationDetail() {
                     <Button variant="outline" onClick={() => setTab('letter')}>{app.coverLetter?.trim() ? 'View cover letter' : 'Write cover letter'}</Button>
                   </div>
                 </div>
+              </div>
+            
+              <div className="mt-6">
+                <TrackingCard app={app} onUpdated={onUpdated} />
               </div>
 
               <div className="surface mt-6 p-6">

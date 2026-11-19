@@ -6,6 +6,9 @@ import Resumes from '../pages/Resumes';
 import Applications from '../pages/Applications';
 import NewApplication from '../pages/NewApplication';
 import ApplicationDetail from '../pages/ApplicationDetail';
+import Board from '../pages/Board';
+import Insights from '../pages/Insights';
+import NotFound from '../pages/NotFound';
 
 export default function PrivateRoutes() {
   const location = useLocation();
@@ -30,7 +33,9 @@ export default function PrivateRoutes() {
           <Route path="applications" element={<Applications />} />
           <Route path="applications/new" element={<NewApplication />} />
           <Route path="applications/:id" element={<ApplicationDetail />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="board" element={<Board />} />
+          <Route path="insights" element={<Insights />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </motion.div>
     </AnimatePresence>

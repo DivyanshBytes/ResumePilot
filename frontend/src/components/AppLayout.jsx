@@ -1,17 +1,30 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Briefcase, FileText, LayoutDashboard, LogOut, Menu, Plus, X } from 'lucide-react';
+import { Briefcase, Columns3, FileText, LayoutDashboard, LogOut, Menu, TrendingUp, Plus, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Logo from './Logo';
 import ThemeToggle from './ThemeToggle';
 import Button from './Button';
+import useShortcuts from '../hooks/useShortcuts';
+import RouteProgress from './RouteProgress';
 
 const links = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/resumes', label: 'Resumes', icon: FileText },
   { to: '/applications', label: 'Applications', icon: Briefcase },
+  { to: '/board', label: 'Board', icon: Columns3 },
+  { to: '/insights', label: 'Insights', icon: TrendingUp },
 ];
+
+const TITLES = {
+  '/dashboard': 'Dashboard',
+  '/resumes': 'Resumes',
+  '/applications': 'Applications',
+  '/applications/new': 'Analyse a job',
+  '/board': 'Board',
+  '/insights': 'Insights',
+};
 
 function SidebarContent({ pillId, onNavigate }) {
   const { user, logout } = useAuth();
@@ -74,11 +87,27 @@ export default function AppLayout({ children }) {
   const { pathname } = useLocation();
   const [open, setOpen] = useState(false);
 
+    useShortcuts();
+
+  // A readable page title for the browser tab and screen readers
+  useEffect(() => {
+    const name = TITLES[pathname] || (pathname.startsWith('/applications/') ? 'Application' : 'Page not found');
+    document.title = `${name} | ResumePilot`;
+  }, [pathname]);
+
   // Close the mobile drawer whenever the page changes
   useEffect(() => setOpen(false), [pathname]);
 
   return (
     <div className="min-h-screen lg:pl-64">
+        <RouteProgress />
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[70] focus:rounded-lg focus:bg-brand-700 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
+      >
+        Skip to content
+      </a>
+
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-stone-200 bg-white dark:border-white/10 dark:bg-panel lg:block">
         <SidebarContent pillId="nav-pill-desktop" />
@@ -132,7 +161,11 @@ export default function AppLayout({ children }) {
 
       {/* Page content. Keyed by path so every page fades in */}
             {/* Page content (PrivateRoutes handles the transitions) */}
-      <main className="mx-auto max-w-5xl px-5 py-8 sm:px-8 sm:py-10">
+        <main
+        id="main"
+        tabIndex={-1}
+        className={`mx-auto px-5 py-8 outline-none sm:px-8 sm:py-10 ${pathname === '/board' ? 'max-w-7xl' : 'max-w-5xl'}`}
+        >
         {children}
       </main>
     </div>
