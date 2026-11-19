@@ -297,6 +297,12 @@ exports.updateApplication = asyncHandler(async (req, res) => {
     }
   }
 
+    if (req.body.coverLetter !== undefined) {
+    const letter = String(req.body.coverLetter).trim();
+    if (letter.length > 10000) throw new AppError('Cover letter is too long', 400);
+    application.coverLetter = letter;
+  }
+  
   await application.save();
   res.status(200).json({ success: true, message: 'Application updated', application });
 });
